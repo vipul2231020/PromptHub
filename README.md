@@ -1,107 +1,191 @@
-# 🚀 PromptHub — AI Prompt Marketplace + Generator
+# PromptHub — AI Prompt Marketplace & Generator
 
-> Scalable AI-powered prompt marketplace with semantic search, prompt generation,
-> and collection-based discovery using FastAPI, PostgreSQL, and NLP embeddings.
+A scalable backend system for managing, searching, and generating AI prompts using FastAPI, PostgreSQL, and NLP embeddings.
 
-## 🏗️ Architecture
-Client → FastAPI → Services → PostgreSQL + pgvector + Redis → Celery
+---
+
+## Overview
+
+PromptHub is an API-first backend that provides:
+
+- Prompt marketplace with categories and collections
+- Semantic search using embeddings
+- Prompt generation using structured templates
+- JWT-based authentication with role-based access
+- Analytics for trending and usage tracking
+
+---
+
+## Architecture
+
+Client → FastAPI → Service Layer → PostgreSQL + pgvector + Redis → Celery
+
+---
+
+## Features
+
+### Authentication
+- User registration and login
+- JWT-based authentication
+- Role-based access control (admin/user)
+
+### Prompt Management
+- Create, read, update, delete prompts
+- Category and tag-based filtering
+- Usage tracking and ratings
+
+### Search
+- Semantic search using vector embeddings
+- Keyword fallback search
+
+### Prompt Generation
+- Template-based prompt generation
+- Intent detection
+- Prompt improvement pipeline
+
+### Collections
+- Group prompts into collections
+- Admin-controlled creation
+
+### Analytics
+- Trending prompts
+- Platform statistics
+
+---
+
+## Tech Stack
+
+- FastAPI
+- PostgreSQL (Supabase)
+- SQLAlchemy
+- JWT Authentication
+- pgvector
+- Redis
+- Celery
+- Sentence Transformers
+- Docker
+
+---
+
+## Project Structure
 
 
-## ⚡ Quick Start
-
-### 1. Clone and Setup
-
-```bash
-git clone https://github.com/yourname/prompthub
-cd prompthub
-python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-2. Configure Environment
-Copy code
-cp .env.example .env
-# Edit .env with your database and secret key settings
-3. Run with Docker (Recommended)
-Copy code
-docker-compose -f docker/docker-compose.yml up --build
-4. Run Locally
-Copy code
-# Start PostgreSQL and Redis first, then:
-uvicorn app.main:app --reload
-5. Seed Database
-Copy code
-python -m scripts.seed_prompts
-6. Run Tests
-Copy code
-pytest tests/ -v
-📡 API Endpoints
-⎘ Copy table
-Method	Endpoint	Description
-POST	/auth/register	Register user
-POST	/auth/login	Login → JWT token
-GET	/prompts/	List all prompts
-GET	/prompts/{id}	Get single prompt
-POST	/prompts/	Create prompt (admin)
-GET	/collections/	List collections
-GET	/collections/{id}	Get collection
-POST	/search/	Semantic search
-POST	/generate/	Generate AI prompt
-GET	/analytics/trending	Trending prompts
-GET	/analytics/stats	Platform stats
-🌐 Interactive Docs
-After starting the server:
-
-Swagger UI: http://localhost:8000/docs
-ReDoc: http://localhost:8000/redoc
-🛠️ Tech Stack
-FastAPI — High-performance API framework
-PostgreSQL + pgvector — Database with vector similarity search
-Redis — Caching and message broker
-Celery — Background task processing
-Sentence Transformers — NLP embeddings (all-MiniLM-L6-v2)
-Docker — Containerization
+prompthub/
+│
+├── app/
+│ ├── api/
+│ ├── core/
+│ ├── db/
+│ ├── models/
+│ ├── schemas/
+│ ├── services/
+│ ├── main.py
+│
+├── worker/
+├── scripts/
+├── tests/
+├── docker/
+├── requirements.txt
+├── .env
 
 
 ---
 
-## 🎯 How to Run Everything (Step by Step)
+## Setup Instructions
 
-```bash
-# Step 1: Docker (easiest)
-docker-compose -f docker/docker-compose.yml up --build
+### 1. Clone Repository
 
-# Step 2: Seed data
-docker exec prompthub_api python -m scripts.seed_prompts
 
-# Step 3: Open API docs
-# http://localhost:8000/docs
+git clone https://github.com/vipul2231020/prompthub.git
 
-# ─────────────────────────────
-# OR run locally:
+cd prompthub
 
-# Step 1: Install deps
+
+### 2. Create Virtual Environment
+
+
+python -m venv venv
+venv\Scripts\activate # Windows
+
+
+### 3. Install Dependencies
+
+
 pip install -r requirements.txt
 
-# Step 2: Set env
-cp .env .env  # edit DATABASE_URL
 
-# Step 3: Start server
+### 4. Configure Environment Variables
+
+Create `.env` file:
+
+
+DATABASE_URL=postgresql+psycopg2://user:password@host:5432/db?sslmode=require
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+
+---
+
+## Running the Application
+
+### Local Run
+
+
 uvicorn app.main:app --reload
 
-# Step 4: Seed
+
+### API Docs 
+
+
+http://127.0.0.1:8000/docs
+
+
+---
+
+## Database Seeding
+
+
 python -m scripts.seed_prompts
 
-# Step 5: Run tests
+
+---
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|--------|---------|------------|
+| POST | /auth/register | Register user |
+| POST | /auth/login | Login and get token |
+| GET | /prompts/ | List all prompts |
+| POST | /prompts/ | Create prompt (admin) |
+| GET | /prompts/{id} | Get prompt |
+| PUT | /prompts/{id} | Update prompt |
+| DELETE | /prompts/{id} | Delete prompt |
+| GET | /collections/ | List collections |
+| POST | /collections/ | Create collection (admin) |
+| GET | /collections/{id} | Get collection |
+| POST | /search/ | Semantic search |
+| POST | /generate/ | Generate prompt |
+| GET | /analytics/trending | Trending prompts |
+| GET | /analytics/stats | Platform stats |
+
+---
+
+## Deployment
+
+The backend is deployed on Render.
+
+Start command:
+
+
+uvicorn app.main:app --host 0.0.0.0 --port 10000
+
+deployed api : https://prompthub-2ish.onrender.com/docs
+
+---
+
+## Testing
+
+
 pytest tests/ -v
-🧠 Project Understanding Summary
-⎘ Copy table
-Layer	What It Does
-Auth	JWT login/register, admin roles
-Prompt Service	Full CRUD, category filtering, usage tracking
-Search Service	pgvector semantic search, ILIKE fallback
-AI Service	Intent detection → template → tone improvement
-Template Engine	9 structured templates for different intents
-Celery Worker	Background embedding generation
-Seed Script	100 prompts, 5 categories, 5 collections
-Tests	Auth, Prompts, Analytics with SQLite in-memory
-This is a complete, production-ready backend system ready for deployment!
