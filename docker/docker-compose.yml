@@ -1,0 +1,87 @@
+version: "3.9"
+
+services:
+  # ──────────────────────────────────────────
+  # FastAPI Application
+  # ──────────────────────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: prompthub_api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/prompthub
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=super-secret-key-change-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ..:/app
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────
+  # Celery Worker
+  # ──────────────────────────────────────────
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: prompthub_worker
+    command: celery -A worker.celery_app worker --loglevel=info
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/prompthub
+      - REDIS_URL=redis://redis:6379/0
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SECRET_KEY=super-secret-key-change-in-production
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────
+  # PostgreSQL Database with pgvector
+  # ──────────────────────────────────────────
+  db:
+    image: ankane/pgvector:latest
+    container_name: prompthub_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: prompthub
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ──────────────────────────────────────────
+  # Redis
+  # ──────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: prompthub_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
